@@ -94,6 +94,24 @@ open class Store<State: StateType>: StoreType {
             }
     }
 
+    open func subscribe<S: StoreSubscriber>(_ subscriber: S, delay: Bool)
+        where S.StoreSubscriberStateType == State {
+            subscribe(subscriber, delay: delay, selector: nil)
+    }
+
+    open func subscribe<SelectedState, S: StoreSubscriber>
+        (_ subscriber: S, delay: Bool, selector: ((State) -> SelectedState)?)
+        where S.StoreSubscriberStateType == SelectedState {
+            if !_isNewSubscriber(subscriber: subscriber) { return }
+
+            subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
+
+            if let state = self.state,
+                !delay {
+                subscriber._newState(state: selector?(state) ?? state)
+            }
+    }
+
     open func unsubscribe(_ subscriber: AnyStoreSubscriber) {
         if let index = subscriptions.index(where: { return $0.subscriber === subscriber }) {
             subscriptions.remove(at: index)
