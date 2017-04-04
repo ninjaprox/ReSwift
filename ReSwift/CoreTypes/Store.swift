@@ -24,11 +24,13 @@ open class Store<State: StateType>: StoreType {
 
     /*private (set)*/ public var state: State! {
         didSet {
+            let copyState: State! = state
+
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             subscriptions.forEach {
                 // if a selector is available, subselect the relevant state
                 // otherwise pass the entire state to the subscriber
-                $0.subscriber?._newState(state: $0.selector?(state) ?? state)
+                $0.subscriber?._newState(state: $0.selector?(copyState) ?? copyState)
             }
         }
     }
