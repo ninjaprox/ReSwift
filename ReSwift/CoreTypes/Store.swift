@@ -19,11 +19,17 @@ open class Store<State: StateType>: StoreType {
 
     typealias SubscriptionType = Subscription<State>
 
+    let lock = NSLock()
+
     // swiftlint:disable todo
     // TODO: Setter should not be public; need way for store enhancers to modify appState anyway
 
     /*private (set)*/ public var state: State! {
         didSet {
+            lock.lock()
+            defer {
+                lock.unlock()
+            }
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             subscriptions.forEach {
                 // if a selector is available, subselect the relevant state
